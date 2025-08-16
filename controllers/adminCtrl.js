@@ -36,4 +36,37 @@ const getAllDoctorsController = async (req, res) => {
   }
 };
 
-module.exports = { getAllDoctorsController, getAllUsersController };
+//Acount status
+const changeAccountStatus = async (req, res) => {
+  try {
+    const { doctorId, status } = req.body;
+    const doctor = await doctorModel.findByIdAndUpdate(doctorId, { status });
+    const user = await userModel.findOne({ _id: doctor.userId });
+    const notification = user.notification;
+    notification.push({
+      type: "doctor-account-request-updated",
+      message: `Your Doctor Account Request is ${status}`,
+      onClickPath: "/notification",
+    });
+    user.isDoctor === "approved" ? true : false;
+    await user.save();
+    res.status(201).send({
+      message: "Account has been approved",
+      data: doctor,
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Account status",
+      error,
+    });
+  }
+};
+
+module.exports = {
+  getAllDoctorsController,
+  getAllUsersController,
+  changeAccountStatus,
+};
