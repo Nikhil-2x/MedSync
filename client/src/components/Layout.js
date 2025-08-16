@@ -90,43 +90,66 @@ const Layout = ({ children }) => {
     navigate("/login");
   };
 
-  //For polling: fetching here as layout is used in every so useeffect will trigger on every page in 5 sec
-  const fetchUserData = async () => {
-    try {
-      const res = await axios.post(
-        "/api/v1/user/getUserData",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (res.data.success) {
-        if (
-          user?.notification &&
-          res.data.data.notification.length > user.notification.length
-        ) {
-          toast.info("New notification received!");
-        }
-
-        dispatch(updateUser(res.data.data));
-      }
-    } catch (error) {
-      console.error("Polling error:", error);
-    }
-  };
+  //-------------doctor menu---------------
+  const doctorMenu = [
+    {
+      name: "Home",
+      path: "/",
+      icon: "fa-solid fa-house",
+    },
+    {
+      name: "Appointments",
+      path: "/appointments",
+      icon: "fa-solid fa-list",
+    },
+    {
+      name: "Profile",
+      path: `/doctor/profile/${user?._id}`,
+      icon: "fa-solid fa-user",
+    },
+  ];
+  //-------------doctor menu---------------
 
   // Choose menu based on user role
-  const SidebarMenu = user?.isAdmin ? adminMenu : userMenu;
+  const SidebarMenu = user?.isAdmin
+    ? adminMenu
+    : user?.isDoctor
+    ? doctorMenu
+    : userMenu;
 
   useEffect(() => {
     if (user?.isAdmin) {
+      //For polling: fetching here as layout is used in every so useeffect will trigger on every page in 5 sec
+      const fetchUserData = async () => {
+        try {
+          const res = await axios.post(
+            "/api/v1/user/getUserData",
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          if (res.data.success) {
+            if (
+              user?.notification &&
+              res.data.data.notification.length > user.notification.length
+            ) {
+              toast.info("New notification received!");
+            }
+
+            dispatch(updateUser(res.data.data));
+          }
+        } catch (error) {
+          console.error("Polling error:", error);
+        }
+      };
       const interval = setInterval(fetchUserData, 5000);
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, dispatch]);
 
   return (
     <>
